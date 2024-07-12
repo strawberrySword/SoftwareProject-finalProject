@@ -183,7 +183,7 @@ double calcEuclideanDistanceSquared(double *x, double *y, int d)
     return result;
 }
 
-double **calcOptimalDecompMatrix(double **initialH, double **W, int n, int k, int maxIterations, double epsilon)
+double **calcOptimalDecompMatrix(double **initialH, double **W, int n, int k)
 {
     int i;
     double frobeniusNorm, **temp, **next, **HHT, **HHTH, **WH;
@@ -203,7 +203,7 @@ double **calcOptimalDecompMatrix(double **initialH, double **W, int n, int k, in
         HHT[i] = (double *)calloc(n, sizeof(double));
 
     /* main loop*/
-    for (i = 0; i < maxIterations; i++)
+    for (i = 0; i < MAX_ITER; i++)
     {
         updateDecompMatrix(initialH, W, next, HHT, HHTH, WH, n, k);
 
@@ -213,7 +213,7 @@ double **calcOptimalDecompMatrix(double **initialH, double **W, int n, int k, in
         initialH = next;
         next = temp;
 
-        if (frobeniusNorm < epsilon)
+        if (frobeniusNorm < EPSILON)
             return next;
     }
     return next;
