@@ -75,7 +75,7 @@ static PyObject *symnmf(PyObject *self, PyObject *args)
     for (int i = 0; i < n; i++)
     {
         row = PyList_New(k);
-        for (int j = 0; j < d; j++)
+        for (int j = 0; j < k; j++)
         {
             item = Py_BuildValue("d", H[i][j]);
             PyList_SetItem(row, j, item);
@@ -342,3 +342,12 @@ static struct PyModuleDef symnmfModule = {
     symnmfMethods};
 
 PyMODINIT_FUNC PyInit_symnmf(void)
+{
+    PyObject *m;
+    m = PyModule_Create(&symnmfModule);
+    if (!m)
+    {
+        return NULL;
+    }
+    return m;
+}
