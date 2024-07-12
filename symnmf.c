@@ -183,6 +183,100 @@ double calcEuclideanDistanceSquared(double *x, double *y, int d)
     return result;
 }
 
+double **calcOptimalDecompMatrix(double **initialH, double **W, int n, int k, int maxIterations, double epsilon)
+{
+    int i;
+    double frobeniusNorm, **temp, **next, **HHT, **HHTH, **WH;
+    /* Initialize all matrices*/
+    next = (double **)calloc(n, sizeof(double *));
+    HHT = (double **)calloc(n, sizeof(double *));
+    HHTH = (double **)calloc(n, sizeof(double *));
+    WH = (double **)calloc(n, sizeof(double *));
+
+    for (i = 0; i < k; i++)
+    {
+        next[i] = (double *)calloc(n, sizeof(double));
+        HHTH[i] = (double *)calloc(n, sizeof(double));
+        WH[i] = (double *)calloc(n, sizeof(double));
+    }
+    for (i = 0; i < n; i++)
+        HHT[i] = (double *)calloc(n, sizeof(double));
+
+    /* main loop*/
+    for (i = 0; i < maxIterations; i++)
+    {
+        updateDecompMatrix(initialH, W, next, HHT, HHTH, WH, n, k);
+
+        frobeniusNorm = calcFrobeniusNorm(next, initialH, n, k);
+
+        temp = initialH;
+        initialH = next;
+        next = temp;
+
+        if (frobeniusNorm < epsilon)
+            return next;
+    }
+    return next;
+}
+
+void updateDecompMatrix(double **initialH, double **W, double **next, double **HHT, double **HHTH, double **WH, int n, int k)
+{
+    int i, j;
+
+    calcMatrixMult(initialH, initialH, HHT, n, k, n, 1);
+
+    calcMatrixMult(HHT, initialH, HHTH, n, n, k, 0);
+
+    calcMatrixMult(W, initialH, WH, n, n, k, 0);
+
+    for (i = 0; i < n; i++)
+    {
+        for (j = 0; j < k; j++)
+        {
+            next[i][j] = initialH[i][j] * (1 - BETA + BETA * (WH[i][j] / HHTH[i][j]));
+        }
+    }
+}
+
+double calcFrobeniusNorm(double **A, double **B, int n, int k)
+{
+    double ret;
+    int i, j;
+    ret = 0;
+    for (i = 0; i < n; i++)
+    {
+        for (j = 0; j < k; j++)
+        {
+            ret += (A[i][j] - B[i][j]) * (A[i][j] - B[i][j]);
+        }
+    }
+    return ret;
+}
+
+int calcMatrixMult(double **A, double **B, double **C, int n, int k, int m, int transpose)
+{
+    int i, j, l;
+    for (i = 0; i < n; i++)
+    {
+        for (j = 0; j < m; j++)
+        {
+            C[i][j] = 0;
+            for (l = 0; l < k; l++)
+            {
+                if (transpose)
+                {
+                    C[i][j] += A[i][l] * B[j][l];
+                }
+                else
+                {
+                    C[i][j] += A[i][l] * B[l][j];
+                }
+            }
+        }
+    }
+    return 0;
+}
+
 void printMatrix(double **M, int n)
 {
     int i, j;
@@ -196,6 +290,7 @@ void printMatrix(double **M, int n)
         printf("\n");
     }
 }
+
 void printDiagMatrix(double *D, int n)
 {
     int i, j;
