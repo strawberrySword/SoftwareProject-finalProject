@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
     int n, d;
     n = 0;
     d = 0;
-
+    int check;
     if (argc != 3)
     {
         perror("Invalid number of arguments.");
@@ -27,6 +27,7 @@ int main(int argc, char *argv[])
     {
         A = calcSymilarityMatrix(dataPoints, n, d);
         printMatrix(A, n);
+        freeMatrix(A, n);
         return 1;
     }
 
@@ -35,6 +36,8 @@ int main(int argc, char *argv[])
         A = calcSymilarityMatrix(dataPoints, n, d);
         D = calcDiagonalDegreeMatrix(A, n);
         printDiagMatrix(D, n);
+        freeMatrix(A, n);
+        freeMatrix(D, n);
         return 1;
     }
 
@@ -44,6 +47,9 @@ int main(int argc, char *argv[])
         D = calcDiagonalDegreeMatrix(A, n);
         W = calcNormalizedSymilarityMatrix(D, A, n);
         printMatrix(W, n);
+        freeMatrix(A, n);
+        freeMatrix(D, n);
+        freeMatrix(W, n);
         return 1;
     }
 
@@ -67,23 +73,46 @@ double **parseFile(char *fname, int *n, int *d)
 
     findArrayDimentions(fp, n, d);
     rewind(fp);
+
     dataPoints = (double **)calloc(*n, sizeof(double *));
+    if (dataPoints == NULL)
+    {
+        perror("An Error Has Occured\n");
+        exit(1);
+    }
     for (i = 0; i < *n; i++)
     {
         dataPoints[i] = (double *)calloc(*d, sizeof(double));
         if (dataPoints[i] == NULL)
         {
             printf("An Error Has Occurred in malloc \n");
-            /* TODO: set return value to failure and free datapoints*/
+            freeMatrix(dataPoints, i);
+            exit(1);
         }
         for (j = 0; (j < *d) && (fscanf(fp, "%lf", &current) != EOF); j++)
         {
             fgetc(fp);
             dataPoints[i][j] = current;
         }
+        if (ferror(fp))
+        {
+            perror("Error reading from file");
+            fclose(fp);
+            exit(1);
+        }
     }
 
     return dataPoints;
+}
+
+void freeMatrix(double **matrix, int length)
+{
+    int i;
+    for (i = 0; i < length; i++)
+    {
+        free(matrix[i]);
+    }
+    free(matrix);
 }
 
 void findArrayDimentions(FILE *fp, int *n, int *d)
@@ -102,6 +131,12 @@ void findArrayDimentions(FILE *fp, int *n, int *d)
             *n = *n + 1;
         }
     }
+    if (ferror(fp))
+    {
+        perror("Error reading from file");
+        fclose(fp);
+        exit(1);
+    }
     printf("%i,%i\n", *n, *d);
     *n = *n + 1;
     *d = ((*d) / (*n)) + 1;
@@ -114,9 +149,20 @@ double **calcSymilarityMatrix(double **dataPoints, int n, int d)
     double **A, distance;
 
     A = (double **)calloc(n, sizeof(double *));
+    if (A == NULL)
+    {
+        perror("An Error Has Occurred in malloc\n");
+        exit(1);
+    }
     for (i = 0; i < n; i++)
     {
         A[i] = (double *)calloc(n, sizeof(double));
+        if (A[i] == NULL)
+        {
+            printf("An Error Has Occurred in malloc \n");
+            freeMatrix(dataPoints, i);
+            exit(1);
+        }
         for (j = 0; j < n; j++)
         {
             distance = calcEuclideanDistanceSquared(dataPoints[i], dataPoints[j], d);
@@ -134,6 +180,11 @@ double *calcDiagonalDegreeMatrix(double **A, int n)
     double sum, *D;
 
     D = (double *)calloc(n, sizeof(double));
+    if (D == NULL)
+    {
+        perror("An Error Has Occurred in malloc\n");
+        exit(1);
+    }
     for (i = 0; i < n; i++)
     {
         sum = 0;
@@ -153,6 +204,11 @@ double **calcNormalizedSymilarityMatrix(double *D, double **A, int n)
     double *Diag, **W;
 
     Diag = (double *)calloc(n, sizeof(double));
+    if (Diag == NULL)
+    {
+        perror("An Error Has Occurred in malloc\n");
+        exit(1);
+    }
     for (i = 0; i < n; i++)
     {
         Diag[i] = 1 / sqrt(D[i]);
@@ -160,9 +216,20 @@ double **calcNormalizedSymilarityMatrix(double *D, double **A, int n)
 
     /* We use the fact that (DAD) = d_i * a_ij * d_j*/
     W = (double **)calloc(n, sizeof(double *));
+    if (W == NULL)
+    {
+        perror("An Error Has Occurred in malloc\n");
+        exit(1);
+    }
     for (i = 0; i < n; i++)
     {
         W[i] = (double *)calloc(n, sizeof(double));
+        if (W[i] == NULL)
+        {
+            printf("An Error Has Occurred in malloc \n");
+            freeMatrix(W, i);
+            exit(1);
+        }
         for (j = 0; j < n; j++)
         {
             W[i][j] = A[i][j] * Diag[i] * Diag[j];
@@ -189,18 +256,60 @@ double **calcOptimalDecompMatrix(double **initialH, double **W, int n, int k)
     double frobeniusNorm, **temp, **next, **HHT, **HHTH, **WH;
     /* Initialize all matrices*/
     next = (double **)calloc(n, sizeof(double *));
+    if (next == NULL)
+    {
+        perror("An Error Has Occurred in malloc\n");
+        exit(1);
+    }
     HHT = (double **)calloc(n, sizeof(double *));
+    if (HHT == NULL)
+    {
+        perror("An Error Has Occurred in malloc\n");
+        free(next);
+        exit(1);
+    }
     HHTH = (double **)calloc(n, sizeof(double *));
+    if (HHTH == NULL)
+    {
+        perror("An Error Has Occurred in malloc\n");
+        free(next);
+        free(HHT);
+        exit(1);
+    }
     WH = (double **)calloc(n, sizeof(double *));
+    if (WH == NULL)
+    {
+        perror("An Error Has Occurred in malloc\n");
+        free(next);
+        free(HHT);
+        free(HHTH);
+        exit(1);
+    }
 
     for (i = 0; i < k; i++)
     {
         next[i] = (double *)calloc(n, sizeof(double));
         HHTH[i] = (double *)calloc(n, sizeof(double));
         WH[i] = (double *)calloc(n, sizeof(double));
+        if (WH == NULL || next == NULL || HHTH == NULL)
+        {
+            freeMatrix(next, i);
+            freeMatrix(HHTH, i);
+            freeMatrix(WH, i);
+            perror("An Error Has Occurred in malloc\n");
+            exit(1);
+        }
     }
     for (i = 0; i < n; i++)
+    {
         HHT[i] = (double *)calloc(n, sizeof(double));
+        if (HHT == NULL)
+        {
+            freeMatrix(HHT, i);
+            perror("An Error Has Occurred in malloc\n");
+            exit(1);
+        }
+    }
 
     /* main loop*/
     for (i = 0; i < MAX_ITER; i++)
