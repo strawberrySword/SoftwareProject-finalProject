@@ -1,20 +1,17 @@
 import sys
 import numpy as np
-import symnmf
+import symnmf as s
 
 
 def read_data_points(data_points):
-    return np.loadtxt(data_points)
-
-
-def output_matrix(matrix):
-    np.matrix(matrix)
-
-
-def initial_H(W, k):
+    data_list = np.loadtxt(data_points,delimiter=',')
+    return data_list.tolist()
+    
+    
+def initial_H(W, k, n):
     m = np.mean(W)
     upper = 2 * np.sqrt(m/k)
-    H_init = np.random.uniform(0, upper, size=(W.shape[0], k))
+    H_init = np.random.uniform(0, upper, size=(n, k))
     return H_init
 
 
@@ -23,52 +20,58 @@ def output_matrix(matrix):
         print(','.join(f"{value:.4f}" for value in r))
 
 
+def symnmf1(dataPoints,k):
+    W = s.norm(dataPoints, D)
+    H_init = initial_H(W, k)
+    H_final = s.symnmf(H_init, W)
+    return H_final
+
 def parseArgs(args):
-    if len(args) == 3:
+    if len(args) == 4:
         try:
-            k = int(args[0])
+            k = int(args[1])
         except:
             print("Invalid number of clusters!")
             exit()
-        goal = args[1]
+        goal = args[2]
         if (goal != "symnmf" and goal != "sym" and goal != "ddg" and goal != "norm"):
             print("Invalid goal name!")
             exit()
 
-        filePath = args[2]
+        filePath = args[3]
         return k, goal, filePath
 
 
 
 if __name__ == '__main__':
     k, goal, filePath = parseArgs(sys.argv)
-    dataPoints = np.loadtxt(filePath)
-
+    dataPoints = read_data_points(filePath)   
+    print(dataPoints)
+    n = len(dataPoints)
     try:
         if (goal == "symnmf"):
-           # beginning of the code ?
             np.random.seed(0)
-            A = symnmf.sym(dataPoints)
-            D = symnmf.ddg(A, n)
-            W = symnmf.norm(D, A, n)
-            H_init = initial_H(W, k)
-            H_final = symnmf.calcOptimalDecompMatrix(H_init, W, n, k)
+            W = s.norm(dataPoints)
+            H_init = initial_H(W, k,n)   
+            H_init = H_init.tolist()    
+            for line in H_init:
+                print(line)
+            print("---------AND NOW-------")
+            H_final = s.symnmf(H_init, W)
             output_matrix(H_final)
 
         elif (goal == "sym"):
-            A = symnmf.sym(dataPoints)
+            A = s.sym(dataPoints)
             output_matrix(A)
 
         elif (goal == "ddg"):
-            A = symnmf.sym(dataPoints)
-            D = symnmf.ddg(dataPoints)
-            output_matrix(D)
+            D = s.ddg(dataPoints)
+            print(D)
         elif (goal == "norm"):
-            A = symnmf.sym(dataPoints)
-            D = symnmf.ddg(dataPoints)
-            W = symnmf.calcNormalizedSymilarityMatrix(dataPoints, D)
+            W = s.norm(dataPoints)    
             output_matrix(W)
 
     except:
+        print("last one Error")
         print("An Error Has Occurred")
         exit()

@@ -12,7 +12,6 @@ int main(int argc, char *argv[])
     int n, d;
     n = 0;
     d = 0;
-    int check;
     if (argc != 3)
     {
         perror("Invalid number of arguments.");
@@ -37,7 +36,7 @@ int main(int argc, char *argv[])
         D = calcDiagonalDegreeMatrix(A, n);
         printDiagMatrix(D, n);
         freeMatrix(A, n);
-        freeMatrix(D, n);
+        free(D);
         return 1;
     }
 
@@ -48,7 +47,7 @@ int main(int argc, char *argv[])
         W = calcNormalizedSymilarityMatrix(D, A, n);
         printMatrix(W, n);
         freeMatrix(A, n);
-        freeMatrix(D, n);
+        free(D);
         freeMatrix(W, n);
         return 1;
     }
@@ -113,6 +112,7 @@ void freeMatrix(double **matrix, int length)
         free(matrix[i]);
     }
     free(matrix);
+    return;
 }
 
 void findArrayDimentions(FILE *fp, int *n, int *d)
@@ -242,7 +242,7 @@ double **calcNormalizedSymilarityMatrix(double *D, double **A, int n)
 double calcEuclideanDistanceSquared(double *x, double *y, int d)
 {
     int i;
-    double result;
+    double result = 0;
     for (i = 0; i < d; i++)
     {
         result += pow(x[i] - y[i], 2);
