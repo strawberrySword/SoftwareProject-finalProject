@@ -1,1 +1,2 @@
-An Error Has Occurred
+nmf: 0.0880
+kmeans: 0.0441

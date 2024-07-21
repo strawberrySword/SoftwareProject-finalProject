@@ -22,9 +22,10 @@ def output_matrix(matrix):
 
 
 def symnmf(dataPoints,k):
-    W = s.norm(dataPoints, D)
-    H_init = initial_H(W, k)
-    H_final = s.symnmf(H_init, W)
+    n = len(dataPoints)
+    W = s.norm(dataPoints)
+    H_init = initial_H(W, k, n)
+    H_final = s.symnmf(H_init.tolist(), W)
     return H_final
 
 def parseArgs(args):

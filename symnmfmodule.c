@@ -31,7 +31,7 @@ static PyObject *symnmf(PyObject *self, PyObject *args)
     {
         printf(ERR);
         returnValue = 1;
-        goto FREE;
+        goto FREE_X;
     }
 
     for (i = 0; i < n; i++)
@@ -42,7 +42,7 @@ static PyObject *symnmf(PyObject *self, PyObject *args)
         {
             printf(ERR);
             returnValue = 1;
-            goto FREE;
+            goto FREE_X;
         }
         for (j = 0; j < k; j++)
         {
@@ -59,7 +59,7 @@ static PyObject *symnmf(PyObject *self, PyObject *args)
         {
             printf(ERR);
             returnValue = 1;
-            goto FREE;
+            goto FREE_X;
         }
         for (j = 0; j < n; j++)
         {
@@ -82,7 +82,14 @@ static PyObject *symnmf(PyObject *self, PyObject *args)
         }
         PyList_SetItem(HList, i, row);
     }
-FREE:
+
+    for (int i = 0; i < n; i++)
+    {
+        free(H[i]);
+    }
+    free(H);
+
+FREE_X:
     for (int i = 0; i < n; i++)
     {
         free(initialH[i]);
@@ -123,7 +130,7 @@ static PyObject *sym(PyObject *self, PyObject *args)
     {
         printf(ERR);
         returnValue = 1;
-        goto FREE;
+        goto FREE_X;
     }
 
     for (i = 0; i < n; i++)
@@ -134,7 +141,7 @@ static PyObject *sym(PyObject *self, PyObject *args)
         {
             printf(ERR);
             returnValue = 1;
-            goto FREE;
+            goto FREE_X;
         }
         for (j = 0; j < d; j++)
         {
@@ -157,7 +164,14 @@ static PyObject *sym(PyObject *self, PyObject *args)
         }
         PyList_SetItem(AList, i, row);
     }
-FREE:
+
+    for (int i = 0; i < n; i++)
+    {
+        free(A[i]);
+    }
+    free(A);
+
+FREE_X:
     for (int i = 0; i < n; i++)
     {
         free(X[i]);
@@ -196,7 +210,7 @@ static PyObject *ddg(PyObject *self, PyObject *args)
     {
         printf(ERR);
         returnValue = 1;
-        goto FREE;
+        goto FREE_X;
     }
 
     for (i = 0; i < n; i++)
@@ -207,7 +221,7 @@ static PyObject *ddg(PyObject *self, PyObject *args)
         {
             printf(ERR);
             returnValue = 1;
-            goto FREE;
+            goto FREE_X;
         }
         for (j = 0; j < d; j++)
         {
@@ -226,7 +240,14 @@ static PyObject *ddg(PyObject *self, PyObject *args)
         item = Py_BuildValue("d", D[i]);
         PyList_SetItem(DList, i, item);
     }
-FREE:
+
+    for (int i = 0; i < n; i++)
+    {
+        free(A[i]);
+    }
+    free(A);
+    free(D);
+FREE_X:
     for (int i = 0; i < n; i++)
     {
         free(X[i]);
@@ -265,7 +286,7 @@ static PyObject *norm(PyObject *self, PyObject *args)
     {
         printf(ERR);
         returnValue = 1;
-        goto FREE;
+        goto FREE_X;
     }
 
     for (i = 0; i < n; i++)
@@ -276,7 +297,7 @@ static PyObject *norm(PyObject *self, PyObject *args)
         {
             printf(ERR);
             returnValue = 1;
-            goto FREE;
+            goto FREE_X;
         }
         for (j = 0; j < d; j++)
         {
@@ -301,7 +322,17 @@ static PyObject *norm(PyObject *self, PyObject *args)
         }
         PyList_SetItem(WList, i, row);
     }
-FREE:
+
+    for (int i = 0; i < n; i++)
+    {
+        free(W[i]);
+        free(A[i]);
+    }
+    free(W);
+    free(A);
+    free(D);
+
+FREE_X:
     for (int i = 0; i < n; i++)
     {
         free(X[i]);
@@ -341,7 +372,7 @@ static struct PyModuleDef symnmfModule = {
     -1,
     symnmfMethods};
 
-PyMODINIT_FUNC PyInit_symnmf(void)
+PyMODINIT_FUNC PyInit_symnmfmodule(void)
 {
     PyObject *m;
     m = PyModule_Create(&symnmfModule);

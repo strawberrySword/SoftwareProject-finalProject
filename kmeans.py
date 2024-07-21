@@ -25,10 +25,12 @@ def kMeans(dataPoints, k, n, d, iter=200 ):
             u['currentCenter'] = [0]*d
             u['size'] = 0
         i += 1
-        
-    for u in centroids:
-        formatted = [ '%.4f' % elem for elem in u['center'] ]
-        print(','.join(formatted))
+
+    clusters = []
+    for i in range(n):
+        clusters.append(findClosestCluster(dataPoints[i], centroids))
+    
+    return clusters
 
 def sumList(a,b):
     return [x + y for x,y in zip(a,b)]
