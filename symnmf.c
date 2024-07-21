@@ -27,7 +27,6 @@ int main(int argc, char *argv[])
         printMatrix(A, n);
         freeMatrix(A, n);
         freeMatrix(dataPoints, n);
-        free(dataPoints);
         return 1;
     }
 
@@ -39,7 +38,6 @@ int main(int argc, char *argv[])
         freeMatrix(A, n);
         free(D);
         freeMatrix(dataPoints, n);
-        free(dataPoints);
         return 1;
     }
 
@@ -53,7 +51,6 @@ int main(int argc, char *argv[])
         free(D);
         freeMatrix(W, n);
         freeMatrix(dataPoints, n);
-        free(dataPoints);
         return 1;
     }
 
