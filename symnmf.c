@@ -291,31 +291,33 @@ double **calcOptimalDecompMatrix(double **initialH, double **W, int n, int k)
         next[i] = (double *)calloc(n, sizeof(double));
         HHTH[i] = (double *)calloc(n, sizeof(double));
         WH[i] = (double *)calloc(n, sizeof(double));
-        if (WH == NULL || next == NULL || HHTH == NULL)
+        if (WH[i] == NULL || next[i] == NULL || HHTH[i] == NULL)
         {
+            perror("An Error Has Occurred in malloc\n");
             freeMatrix(next, i);
             freeMatrix(HHTH, i);
             freeMatrix(WH, i);
-            perror("An Error Has Occurred in malloc\n");
             exit(1);
         }
     }
     for (i = 0; i < n; i++)
     {
         HHT[i] = (double *)calloc(n, sizeof(double));
-        if (HHT == NULL)
+        if (HHT[i] == NULL)
         {
-            freeMatrix(HHT, i);
             perror("An Error Has Occurred in malloc\n");
+            freeMatrix(HHT, i);
             exit(1);
         }
     }
 
     /* main loop*/
+    printf("into main loop\n");
     for (i = 0; i < MAX_ITER; i++)
     {
+        printf("iteration %i\n", i);
         updateDecompMatrix(initialH, W, next, HHT, HHTH, WH, n, k);
-
+        printf("after decomp update\n");
         frobeniusNorm = calcFrobeniusNorm(next, initialH, n, k);
 
         temp = initialH;
@@ -335,8 +337,10 @@ void updateDecompMatrix(double **initialH, double **W, double **next, double **H
     calcMatrixMult(initialH, initialH, HHT, n, k, n, 1);
 
     calcMatrixMult(HHT, initialH, HHTH, n, n, k, 0);
+    printf("after HHTH\n");
 
     calcMatrixMult(W, initialH, WH, n, n, k, 0);
+    printf("after WH\n");
 
     for (i = 0; i < n; i++)
     {
@@ -345,7 +349,7 @@ void updateDecompMatrix(double **initialH, double **W, double **next, double **H
             next[i][j] = initialH[i][j] * (1 - BETA + BETA * (WH[i][j] / HHTH[i][j]));
         }
     }
-}
+}git add 
 
 double calcFrobeniusNorm(double **A, double **B, int n, int k)
 {
@@ -362,7 +366,7 @@ double calcFrobeniusNorm(double **A, double **B, int n, int k)
     return ret;
 }
 
-int calcMatrixMult(double **A, double **B, double **C, int n, int k, int m, int transpose)
+int calcMatrixMult(double **A, double **B, double **C, int n, int k, int m)
 {
     int i, j, l;
     for (i = 0; i < n; i++)
@@ -372,14 +376,24 @@ int calcMatrixMult(double **A, double **B, double **C, int n, int k, int m, int 
             C[i][j] = 0;
             for (l = 0; l < k; l++)
             {
-                if (transpose)
-                {
-                    C[i][j] += A[i][l] * B[j][l];
-                }
-                else
-                {
-                    C[i][j] += A[i][l] * B[l][j];
-                }
+                C[i][j] += A[i][l] * B[l][j];
+            }
+        }
+    }
+    return 0;
+}
+
+int calcMatrixMultTranspose(double **A, double **B, double **C, int n, int k, int m)
+{
+    int i, j, l;
+    for (i = 0; i < n; i++)
+    {
+        for (j = 0; j < m; j++)
+        {
+            C[i][j] = 0;
+            for (l = 0; l < k; l++)
+            {
+                C[i][j] += A[i][l] * B[j][l];
             }
         }
     }

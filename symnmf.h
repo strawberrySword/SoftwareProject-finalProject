@@ -15,7 +15,9 @@ void updateDecompMatrix(double **initialH, double **W, double **next, double **H
 
 double calcEuclideanDistanceSquared(double *x, double *y, int d);
 double calcFrobeniusNorm(double **A, double **B, int n, int k);
-int calcMatrixMult(double **A, double **B, double **C, int n, int k, int m, int transpose);
+int calcMatrixMult(double **A, double **B, double **C, int n, int k, int m);
+int calcMatrixMultTranspose(double **A, double **B, double **C, int n, int k, int m);
 
 void printMatrix(double **M, int n);
 void printDiagMatrix(double *D, int n);
+void freeMatrix(double **matrix, int length);
