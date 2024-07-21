@@ -83,12 +83,6 @@ static PyObject *symnmf(PyObject *self, PyObject *args)
         PyList_SetItem(HList, i, row);
     }
 
-    for (int i = 0; i < n; i++)
-    {
-        free(H[i]);
-    }
-    free(H);
-
 FREE_X:
     for (int i = 0; i < n; i++)
     {

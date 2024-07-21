@@ -27,6 +27,7 @@ int main(int argc, char *argv[])
         printMatrix(A, n);
         freeMatrix(A, n);
         freeMatrix(dataPoints, n);
+        free(dataPoints);
         return 1;
     }
 
@@ -38,6 +39,7 @@ int main(int argc, char *argv[])
         freeMatrix(A, n);
         free(D);
         freeMatrix(dataPoints, n);
+        free(dataPoints);
         return 1;
     }
 
@@ -51,6 +53,7 @@ int main(int argc, char *argv[])
         free(D);
         freeMatrix(W, n);
         freeMatrix(dataPoints, n);
+        free(dataPoints);
         return 1;
     }
 
@@ -136,7 +139,7 @@ void findArrayDimentions(FILE *fp, int *n, int *d)
     }
     if (ferror(fp))
     {
-        perror("Error reading from file");
+        perror("An Error Has Occured");
         fclose(fp);
         exit(1);
     }
@@ -208,7 +211,7 @@ double **calcNormalizedSymilarityMatrix(double *D, double **A, int n)
     Diag = (double *)calloc(n, sizeof(double));
     if (Diag == NULL)
     {
-        perror("An Error Has Occurred in malloc\n");
+        perror("An Error Has Occurred\n");
         exit(1);
     }
     for (i = 0; i < n; i++)
@@ -220,7 +223,7 @@ double **calcNormalizedSymilarityMatrix(double *D, double **A, int n)
     W = (double **)calloc(n, sizeof(double *));
     if (W == NULL)
     {
-        perror("An Error Has Occurred in malloc\n");
+        perror("An Error Has Occurred\n");
         exit(1);
     }
     for (i = 0; i < n; i++)
@@ -228,7 +231,7 @@ double **calcNormalizedSymilarityMatrix(double *D, double **A, int n)
         W[i] = (double *)calloc(n, sizeof(double));
         if (W[i] == NULL)
         {
-            printf("An Error Has Occurred in malloc \n");
+            printf("An Error Has Occurred\n");
             freeMatrix(W, i);
             exit(1);
         }
