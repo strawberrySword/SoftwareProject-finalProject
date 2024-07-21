@@ -21,12 +21,12 @@ int main(int argc, char *argv[])
     fname = argv[2];
     goal = argv[1];
     dataPoints = parseFile(fname, &n, &d);
-
     if (strcmp(goal, "sym") == 0)
     {
         A = calcSymilarityMatrix(dataPoints, n, d);
         printMatrix(A, n);
         freeMatrix(A, n);
+        freeMatrix(dataPoints, n);
         return 1;
     }
 
@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
         printDiagMatrix(D, n);
         freeMatrix(A, n);
         free(D);
+        freeMatrix(dataPoints, n);
         return 1;
     }
 
@@ -49,6 +50,7 @@ int main(int argc, char *argv[])
         freeMatrix(A, n);
         free(D);
         freeMatrix(W, n);
+        freeMatrix(dataPoints, n);
         return 1;
     }
 
@@ -119,14 +121,15 @@ void findArrayDimentions(FILE *fp, int *n, int *d)
 {
     /* this section finds d and n by counting \n and ','. this relies HEAVILY on the format of the input */
     char c;
-    while (!feof(fp))
+    double temp;
+    while (fscanf(fp, "%lf", &temp) != EOF)
     {
         c = fgetc(fp);
-        if (c == ',')
+        if (*n == 0 && c == ',')
         {
             *d = *d + 1;
         }
-        if (c == '\n')
+        if (c == '\n' || c == EOF)
         {
             *n = *n + 1;
         }
@@ -137,9 +140,8 @@ void findArrayDimentions(FILE *fp, int *n, int *d)
         fclose(fp);
         exit(1);
     }
-    printf("%i,%i\n", *n, *d);
-    *n = *n + 1;
-    *d = ((*d) / (*n)) + 1;
+    /* *n = *n + 1;*/
+    *d = *d + 1;
     return;
 }
 
@@ -256,68 +258,46 @@ double **calcOptimalDecompMatrix(double **initialH, double **W, int n, int k)
     double frobeniusNorm, **temp, **next, **HHT, **HHTH, **WH;
     /* Initialize all matrices*/
     next = (double **)calloc(n, sizeof(double *));
-    if (next == NULL)
-    {
-        perror("An Error Has Occurred in malloc\n");
-        exit(1);
-    }
+
     HHT = (double **)calloc(n, sizeof(double *));
-    if (HHT == NULL)
-    {
-        perror("An Error Has Occurred in malloc\n");
-        free(next);
-        exit(1);
-    }
+
     HHTH = (double **)calloc(n, sizeof(double *));
-    if (HHTH == NULL)
-    {
-        perror("An Error Has Occurred in malloc\n");
-        free(next);
-        free(HHT);
-        exit(1);
-    }
+
     WH = (double **)calloc(n, sizeof(double *));
-    if (WH == NULL)
+
+    if (next == NULL || HHT == NULL || HHTH == NULL || WH == NULL)
     {
-        perror("An Error Has Occurred in malloc\n");
+        printf("An Error Has Occurred\n");
         free(next);
         free(HHT);
         free(HHTH);
+        free(WH);
         exit(1);
     }
 
-    for (i = 0; i < k; i++)
+    for (i = 0; i < n; i++)
     {
-        next[i] = (double *)calloc(n, sizeof(double));
-        HHTH[i] = (double *)calloc(n, sizeof(double));
-        WH[i] = (double *)calloc(n, sizeof(double));
-        if (WH[i] == NULL || next[i] == NULL || HHTH[i] == NULL)
+        next[i] = (double *)calloc(k, sizeof(double));
+        HHTH[i] = (double *)calloc(k, sizeof(double));
+        WH[i] = (double *)calloc(k, sizeof(double));
+        HHT[i] = (double *)calloc(n, sizeof(double));
+
+        if (WH[i] == NULL || next[i] == NULL || HHTH[i] == NULL || HHT[i] == NULL)
         {
-            perror("An Error Has Occurred in malloc\n");
+            perror("An Error Has Occurred\n");
             freeMatrix(next, i);
             freeMatrix(HHTH, i);
             freeMatrix(WH, i);
-            exit(1);
-        }
-    }
-    for (i = 0; i < n; i++)
-    {
-        HHT[i] = (double *)calloc(n, sizeof(double));
-        if (HHT[i] == NULL)
-        {
-            perror("An Error Has Occurred in malloc\n");
             freeMatrix(HHT, i);
             exit(1);
         }
     }
 
     /* main loop*/
-    printf("into main loop\n");
     for (i = 0; i < MAX_ITER; i++)
     {
-        printf("iteration %i\n", i);
         updateDecompMatrix(initialH, W, next, HHT, HHTH, WH, n, k);
-        printf("after decomp update\n");
+
         frobeniusNorm = calcFrobeniusNorm(next, initialH, n, k);
 
         temp = initialH;
@@ -325,22 +305,20 @@ double **calcOptimalDecompMatrix(double **initialH, double **W, int n, int k)
         next = temp;
 
         if (frobeniusNorm < EPSILON)
-            return next;
+            return initialH;
     }
-    return next;
+    return initialH;
 }
 
 void updateDecompMatrix(double **initialH, double **W, double **next, double **HHT, double **HHTH, double **WH, int n, int k)
 {
     int i, j;
 
-    calcMatrixMult(initialH, initialH, HHT, n, k, n, 1);
+    calcMatrixMultTranspose(initialH, initialH, HHT, n, k, n);
 
-    calcMatrixMult(HHT, initialH, HHTH, n, n, k, 0);
-    printf("after HHTH\n");
+    calcMatrixMult(HHT, initialH, HHTH, n, n, k);
 
-    calcMatrixMult(W, initialH, WH, n, n, k, 0);
-    printf("after WH\n");
+    calcMatrixMult(W, initialH, WH, n, n, k);
 
     for (i = 0; i < n; i++)
     {
@@ -349,7 +327,7 @@ void updateDecompMatrix(double **initialH, double **W, double **next, double **H
             next[i][j] = initialH[i][j] * (1 - BETA + BETA * (WH[i][j] / HHTH[i][j]));
         }
     }
-}git add 
+}
 
 double calcFrobeniusNorm(double **A, double **B, int n, int k)
 {

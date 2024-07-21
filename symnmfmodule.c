@@ -36,7 +36,6 @@ static PyObject *symnmf(PyObject *self, PyObject *args)
 
     for (i = 0; i < n; i++)
     {
-        printf("building H\n");
         row = PyList_GetItem(initialHList, i);
         initialH[i] = (double *)calloc(k, sizeof(double));
         if (initialH[i] == NULL)
@@ -54,7 +53,6 @@ static PyObject *symnmf(PyObject *self, PyObject *args)
 
     for (i = 0; i < n; i++)
     {
-        printf("building W\n");
         row = PyList_GetItem(WList, i);
         W[i] = (double *)calloc(n, sizeof(double));
         if (W[i] == NULL)
@@ -70,9 +68,6 @@ static PyObject *symnmf(PyObject *self, PyObject *args)
         }
     }
 
-    if(initialH == NULL || W==NULL){
-        printf("is null\n");
-    }
     H = calcOptimalDecompMatrix(initialH, W, n, k);
 
     HList = PyList_New(n);
@@ -341,7 +336,7 @@ static PyMethodDef symnmfMethods[] = {
 
 static struct PyModuleDef symnmfModule = {
     PyModuleDef_HEAD_INIT,
-    "symnmf",
+    "symnmfmodule",
     NULL,
     -1,
     symnmfMethods};

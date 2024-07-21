@@ -1,20 +1,27 @@
-
 import numpy as np
 from sklearn.metrics import silhouette_score
 import kmeans
-import symnmf
+import symnmf as s
 import sys
 
 def read_data_points(data_points):
     return np.loadtxt(data_points,delimiter=',')
 
 
+def initial_H(W, k, n):
+    m = np.mean(W)
+    upper = 2 * np.sqrt(m/k)
+    H_init = np.random.uniform(0, upper, size=(n, k))
+    return H_init
 
 def Symnmf_analysis(data ,k):
-  
-    clusters = np.array(symnmf.symnmf1(data,k))
+    n, d = data.shape
+    W = s.norm(data)
+    H_init = initial_H(W, k,n)   
+    H_init = H_init.tolist()
+    H_final = s.symnmf(H_init, W)
+    clusters = np.array(H_final)
     return clusters.argmax(axis=1)
-
 
 def Kmeans_analysis(data ,k):
     n,d = data.shape
@@ -22,7 +29,7 @@ def Kmeans_analysis(data ,k):
     return clusters
 
 def main():
-    data_path =  sys.argv[2]
+    data_path = sys.argv[2]
     k = int(sys.argv[1])
     data_points = read_data_points(data_path)
     #finding clusters
